@@ -1,0 +1,27 @@
+name: dockge
+
+services:
+  # Dockge (Stack Management)
+  # https://dockge.kuma.pet/
+  dockge:
+    image: louislam/dockge:1
+    container_name: dockge
+    restart: unless-stopped
+    ports:
+      - "${DOCKGE_PORT}:5001"
+    environment:
+      - TZ=${TIMEZONE}
+      - DOCKGE_STACKS_DIR=/opt/stacks
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKGE_DATA}:/app/data
+      - ${DOCKGE_COMPOSE}:/opt/stacks
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+
+networks:
+  proxy_net:
+    external: true

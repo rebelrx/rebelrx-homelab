@@ -1,0 +1,70 @@
+name: books
+services:
+  # Calibre (Library Management)
+  # https://docs.linuxserver.io/images/docker-calibre/
+  calibre:
+    image: lscr.io/linuxserver/calibre:latest
+    container_name: calibre
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${CALIBRE_PORT_HTTP}:8080 #Calibre desktop GUI (only for reverse proxy access)
+      - 127.0.0.1:${CALIBRE_PORT_HTTPS}:8181 #Calibre desktop GUI HTTPS
+      - 127.0.0.1:${CALIBRE_PORT_WEBSERVER}:8081 #Calibre webserver GUI (needs to be enabled in GUI settings first)
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CALIBRE_CONFIG}:/config
+      - ${CALIBRE_LIBRARY}:/books
+      - ${CALIBRE_PLUGINS}:/plugins
+    networks:
+      - proxy_net
+    shm_size: 1gb
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Calibre-Web (Web Reader)
+  # https://docs.linuxserver.io/images/docker-calibre-web/
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre-web
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${CALIBREWEB_PORT}:8083 #Calibre-web UI
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - DOCKER_MODS=linuxserver/mods:universal-calibre
+    volumes:
+      - ${CALIBREWEB_CONFIG}:/config
+      - ${CALIBRE_LIBRARY}:/books
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Kavita (Comic/Book Reader)
+  # https://docs.linuxserver.io/images/docker-kavita/#application-setup
+  kavita:
+    image: lscr.io/linuxserver/kavita:latest
+    container_name: kavita
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${KAVITA_PORT}:5000 #Kavita WebUI
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${KAVITA_CONFIG}:/config
+      - ${KAVITA_LIBRARY}:/data
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

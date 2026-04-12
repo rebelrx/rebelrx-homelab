@@ -1,0 +1,30 @@
+name: homepage
+services:
+  # Homepage (Dashboard)
+  # https://gethomepage.dev/installation/docker/
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${HOMEPAGE_PORT}:3000
+    environment:
+      - TZ=${TIMEZONE}
+      # Allow access via your domain/host through NPM
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
+      # Optional auth (uncomment & change if you want basic auth)
+      # HOMEPAGE_AUTH_USER: "user"
+      # HOMEPAGE_AUTH_PASS: "change_me"
+    volumes:
+      - ${HOMEPAGE_CONFIG}:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Optional but nice for correct times:
+      # - /etc/localtime:/etc/localtime:ro
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

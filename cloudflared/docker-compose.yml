@@ -1,0 +1,16 @@
+name: cloudflared
+services:
+  # Cloudflare Tunnel Client (VPN Tunnel)
+  # https://github.com/cloudflare/cloudflared
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    networks:
+      - proxy_net
+networks:
+  proxy_net:
+    external: true

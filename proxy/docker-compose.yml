@@ -1,0 +1,31 @@
+name: proxy
+services:
+  # Nginx Proxy Manager (Reverse Proxy)
+  # https://nginxproxymanager.com/setup/
+  nginx-proxy-manager:
+    image: docker.io/jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 127.0.0.1:${NPM_ADMIN_PORT}:81
+      - 443:443
+    environment:
+      - TZ=${TIMEZONE}
+      - DISABLE_IPV6=true
+    volumes:
+      - ${NPM_DATA}:/data
+      - ${NPM_LETSENCRYPT}:/etc/letsencrypt
+    networks:
+      - nextcloud-aio
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true
+    name: proxy_net
+  nextcloud-aio:
+    external: true
+    name: nextcloud-aio

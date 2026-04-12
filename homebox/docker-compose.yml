@@ -1,0 +1,35 @@
+name: homebox
+services:
+  # HomeBox (Home Inventory)
+  # https://homebox.software/en/installation
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:latest
+    container_name: homebox
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${HOMEBOX_PORT}:7745
+    environment:
+      - HBOX_LOG_LEVEL=info
+      - HBOX_LOG_FORMAT=text
+      - HBOX_WEB_MAX_UPLOAD_SIZE=10
+      - HBOX_OPTIONS_ALLOW_ANALYTICS=false
+    volumes:
+      - ${HOMEBOX_DATA}:/data
+    networks:
+      - proxy_net
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -qO-
+        - http://127.0.0.1:7745/
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

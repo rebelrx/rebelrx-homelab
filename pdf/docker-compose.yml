@@ -1,0 +1,20 @@
+name: pdf
+services:
+  # BentoPDF (PDF Tools)
+  # https://github.com/alam00000/bentopdf
+  bentopdf:
+    image: ghcr.io/alam00000/bentopdf:latest
+    container_name: bentopdf
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${BENTOPDF_PORT}:8080
+    environment:
+      - TZ=${TIMEZONE}
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

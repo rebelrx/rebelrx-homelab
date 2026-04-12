@@ -1,0 +1,29 @@
+name: wud
+services:
+  # What's Up Docker? (Update Monitoring)
+  # https://getwud.github.io/wud/#/quickstart/
+  whatsupdocker:
+    image: getwud/wud:latest
+    container_name: wud
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${WUD_PORT}:3000
+    environment:
+      - TZ=${TIMEZONE}
+      - WUD_TRIGGER_SMTP_EMAIL_HOST=${WUD_TRIGGER_SMTP_EMAIL_HOST}
+      - WUD_TRIGGER_SMTP_EMAIL_PORT=${WUD_TRIGGER_SMTP_EMAIL_PORT}
+      - WUD_TRIGGER_SMTP_EMAIL_USER=${WUD_TRIGGER_SMTP_EMAIL_USER}
+      - WUD_TRIGGER_SMTP_EMAIL_PASS=${WUD_TRIGGER_SMTP_EMAIL_PASS}
+      - WUD_TRIGGER_SMTP_EMAIL_FROM=${WUD_TRIGGER_SMTP_EMAIL_FROM}
+      - WUD_TRIGGER_SMTP_EMAIL_TO=${WUD_TRIGGER_SMTP_EMAIL_TO}
+      - WUD_TRIGGER_SMTP_EMAIL_TLS_ENABLED=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=true
+networks:
+  proxy_net:
+    external: true

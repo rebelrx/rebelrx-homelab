@@ -1,0 +1,25 @@
+name: audiobooks
+services:
+  # Audiobookshelf (Audiobooks/podcast media server)
+  # https://www.audiobookshelf.org/docs/#docker-compose-install
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${AUDIOBOOKSHELF_PORT}:80"
+    environment:
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${AUDIOBOOKS}:/audiobooks
+      - ${PODCASTS}:/podcasts
+      - ${AUDIOBOOKSHELF_CONFIG}:/config
+      - ${AUDIOBOOKSHELF_METADATA}:/metadata
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=true
+networks:
+  proxy_net:
+    external: true

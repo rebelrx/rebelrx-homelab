@@ -1,0 +1,31 @@
+name: mkdocs
+services:
+  # Material for MkDocs (Site publisher)
+  # https://squidfunk.github.io/mkdocs-material/getting-started/
+  mkdocs:
+    image: squidfunk/mkdocs-material
+    container_name: mkdocs
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${MKDOCS_PORT}:8000
+    volumes:
+      - ${MKDOCS_DOCS}:/docs
+    stdin_open: true
+    tty: true
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=true
+  # Nginx (Webserver)
+  mkdocs-web:
+    image: nginx:alpine
+    container_name: mkdocs-web
+    restart: unless-stopped
+    volumes:
+      - ${MKDOCS_SITE}:/usr/share/nginx/html:ro
+    networks:
+      - proxy_net
+networks:
+  proxy_net:
+    external: true

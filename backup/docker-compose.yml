@@ -1,0 +1,42 @@
+name: backup
+services:
+  # Kopia (Backup)
+  # https://kopia.io/docs/installation/#docker-images
+  kopia:
+    image: kopia/kopia:latest
+    container_name: kopia
+    hostname: kopia
+    restart: unless-stopped
+    ports:
+      - ${PORT}:51515
+    # Kopia server (Web UI + API)
+    command:
+      - server
+      - start
+      - --disable-csrf-token-checks
+      - --insecure
+      - --address=0.0.0.0:51515
+      - --server-username=${KOPIA_UI_USER}
+      - --server-password=${KOPIA_UI_PASS}
+    environment:
+      - KOPIA_PASSWORD=${KOPIA_PASSWORD}
+      - TZ=${TIMEZONE}
+    volumes:
+      # Mount local folders needed by kopia
+      - ${KOPIA_CONFIG_PATH}:/app/config
+      - ${KOPIA_CACHE_PATH}:/app/cache
+      - ${KOPIA_LOG_PATH}:/app/logs
+      # Mount local folders to snapshot
+      - ${KOPIA_LOCAL_PATH}:/data:ro
+      # Mount repository location
+      - ${KOPIA_REPOSITORY_PATH}:/repository
+      # Mount path for browsing mounted snapshots
+      - ${KOPIA_TMP_PATH}:/tmp:shared
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

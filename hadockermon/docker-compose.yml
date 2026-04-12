@@ -1,0 +1,42 @@
+name: hadockermon
+services:
+  # HA Dockermon (Home Assistant Docker Monitor)
+  # https://github.com/philhawthorne/ha-dockermon
+  ha-dockermon:
+    image: philhawthorne/ha-dockermon:latest
+    container_name: ha-dockermon
+    restart: unless-stopped
+    ports:
+      - ${PORT_HADOCKERMON}:8126
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Docker Socket Proxy (Secure Docker API Access)
+  # https://github.com/Tecnativa/docker-socket-proxy
+  dockerproxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: dockerproxy
+    restart: unless-stopped
+    ports:
+      - ${PORT_DOCKERPROXY}:2375
+    environment:
+      - LOG_LEVEL=info
+      # Dockermon API capabilities:
+      - CONTAINERS=1
+      - INFO=1
+      - IMAGES=1
+      - NETWORKS=1
+      - VOLUMES=1
+      - SYSTEM=1
+      - VERSION=1
+      - STATS=1
+    volumes:
+      # If you want Dockermon to CONTROL containers (start/stop/restart), the docker socket must be mounted read-write:
+      #  - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks: {}

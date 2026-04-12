@@ -1,0 +1,83 @@
+name: roms
+services:
+  # RomM (ROM Management)
+  # https://docs.romm.app/latest/Getting-Started/Quick-Start-Guide/
+  romm:
+    image: rommapp/romm:latest
+    container_name: romm
+    restart: unless-stopped
+    depends_on:
+      romm-db:
+        condition: service_healthy
+        restart: true
+    ports:
+      - ${ROMM_PORT}:8080
+    environment:
+      - TZ=${TIMEZONE}
+      - DB_HOST=romm-db
+      - DB_NAME=${MARIADB_DATABASE} # Should match MARIADB_DATABASE in mariadb
+      - DB_USER=${MARIADB_USER} # Should match MARIADB_USER in mariadb
+      - DB_PASSWD=${MARIADB_PASSWD} # Should match MARIADB_PASSWORD in mariadb
+      - ENABLE_RESCAN_ON_FILESYSTEM_CHANGE=true
+      - ENABLE_SCHEDULED_RESCAN=true
+      - ROMM_AUTH_SECRET_KEY=${ROMM_AUTH_SECRET_KEY} # Generate a key with `openssl rand -hex 32`
+      - IGDB_CLIENT_ID=${IGDB_CLIENT_ID} # https://docs.romm.app/4.5.0/Getting-Started/Metadata-Providers/#igdb
+      - IGDB_CLIENT_SECRET=${IGDB_CLIENT_SECRET}
+      - SCREENSCRAPER_USER=${SCREENSCRAPER_USER} # https://docs.romm.app/4.5.0/Getting-Started/Metadata-Providers/#screenscraper
+      - SCREENSCRAPER_PASSWORD=${SCREENSCRAPER_PASSWORD}
+      - MOBYGAMES_API_KEY=${MOBYGAMES_API_KEY} # https://docs.romm.app/4.5.0/Getting-Started/Metadata-Providers/#mobygames
+      - RETROACHIEVEMENTS_API_KEY=${RETROACHIEVEMENTS_API_KEY} # https://docs.romm.app/latest/Getting-Started/Metadata-Providers/#retroachievements
+      - STEAMGRIDDB_API_KEY=${STEAMGRIDDB_API_KEY} # https://docs.romm.app/latest/Getting-Started/Metadata-Providers/#steamgriddb
+      - HASHEOUS_API_ENABLED=true # https://docs.romm.app/latest/Getting-Started/Metadata-Providers/#hasheous
+      - PLAYMATCH_API_ENABLED=true # https://docs.romm.app/4.5.0/Getting-Started/Metadata-Providers/#playmatch
+      - LAUNCHBOX_API_ENABLED=true # https://docs.romm.app/4.5.0/Getting-Started/Metadata-Providers/#launchbox
+      - ENABLE_SCHEDULED_UPDATE_LAUNCHBOX_METADATA=true
+      - SCHEDULED_UPDATE_LAUNCHBOX_METADATA_CRON=0 4 * * *
+      - FLASHPOINT_API_ENABLED=true # https://docs.romm.app/4.5.0/Getting-Started/Metadata-Providers/#flashpoint
+      - HLTB_API_ENABLED=true # https://docs.romm.app/4.5.0/Getting-Started/Metadata-Providers/#how-long-to-beat
+    volumes:
+      - ${ROMM_RESOURCES}:/romm/resources # Resources fetched from IGDB (covers, screenshots, etc.)
+      - ${ROMM_DATA}:/redis-data # Cached data for background tasks
+      - ${ROMM_LIBRARY}:/romm/library # Your game library. Check https://docs.romm.app/latest/Getting-Started/Folder-Structure/ for more details.
+      - ${ROMM_ASSETS}:/romm/assets # Uploaded saves, states, etc.
+      - ${ROMM_CONFIG}:/romm/config # (Optional) Path where config.yml is stored
+    networks:
+      - proxy_net
+      - guest_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # MariaDB (Database)
+  romm-db:
+    image: mariadb:latest
+    container_name: romm-db
+    restart: unless-stopped
+    environment:
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD} # Use a unique, secure password
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWD}
+    volumes:
+      - ${ROMM_MYSQL_DATA}:/var/lib/mysql
+    networks:
+      - proxy_net
+      - guest_net
+    healthcheck:
+      test:
+        - CMD
+        - healthcheck.sh
+        - --connect
+        - --innodb_initialized
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 10s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true
+  guest_net:
+    external: true

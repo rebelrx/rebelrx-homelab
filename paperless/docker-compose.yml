@@ -1,0 +1,98 @@
+name: paperless
+services:
+  # Paperless-ngx (Document Management)
+  # https://docs.paperless-ngx.com/setup/#docker
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: paperless-webserver
+    restart: unless-stopped
+    depends_on:
+      - db
+      - broker
+      - gotenberg
+      - tika
+    ports:
+      - 127.0.0.1:${PAPERLESS_PORT}:8000
+    env_file: docker-compose.env
+    volumes:
+      - ${PAPERLESS_DATA}:/usr/src/paperless/data
+      - ${PAPERLESS_MEDIA}:/usr/src/paperless/media
+      - ${PAPERLESS_EXPORT}:/usr/src/paperless/export
+      - ${PAPERLESS_CONSUME}:/usr/src/paperless/consume
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Redis (Message Broker)
+  broker:
+    image: docker.io/library/redis:8
+    container_name: paperless-broker
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    networks:
+      - proxy_net
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # PostgreSQL (Database)
+  db:
+    image: docker.io/library/postgres:18
+    container_name: paperless-db
+    restart: unless-stopped
+    volumes:
+      - ${PAPERLESS_PGDATA}:/var/lib/postgresql
+    networks:
+      - proxy_net
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Gotenberg (Document Conversion)
+  gotenberg:
+    image: docker.io/gotenberg/gotenberg:8.25
+    container_name: paperless-gotenberg
+    restart: unless-stopped
+    # The gotenberg chromium route is used to convert .eml files. We do not
+    # want to allow external content like tracking pixels or even javascript.
+    command:
+      - gotenberg
+      - --chromium-disable-javascript=true
+      - --chromium-allow-list=file:///tmp/.*
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Apache Tika (Content Extraction)
+  tika:
+    image: docker.io/apache/tika:latest
+    container_name: paperless-tika
+    restart: unless-stopped
+    networks:
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+volumes:
+  redisdata: null
+networks:
+  proxy_net:
+    external: true
