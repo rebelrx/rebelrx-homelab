@@ -66,11 +66,10 @@ Built for people who want to understand their infrastructure — not just run it
 ## Quick Start
 
 ```bash
-git clone https://github.com/rebelrx/rebelrx-homelab.git
+git clone https://forgejo.tail.rebelrx.net/nima/rebelrx-homelab
 cd rebelrx-homelab/stacks/<stack>
 
 cp .env.example .env
-# Edit .env for your environment
 docker compose up -d
 
 ---
@@ -105,6 +104,7 @@ docker compose up -d
 | [proxy](stacks/proxy/) | Reverse proxy and SSL | Nginx Proxy Manager |
 | [recipes](stacks/recipes/) | Recipe management | Mealie, PostgreSQL |
 | [roms](stacks/roms/) | ROM library management | RomM, MariaDB |
+| [search](stacks/search/) | Privacy-respecting metasearch engine | SearXNG, Valkey |
 | [speedtest](stacks/speedtest/) | Network speed monitoring | Speedtest Tracker, Librespeed |
 | [template](stacks/_template/) | Boilerplate for new stacks | — |
 | [uptime](stacks/uptime/) | Uptime monitoring | Uptime Kuma |
@@ -154,6 +154,7 @@ docker compose up -d
     ├── proxy/
     ├── recipes/
     ├── roms/
+    ├── search/
     ├── speedtest/
     ├── uptime/
     └── wud/
@@ -303,6 +304,7 @@ Committed as `docker-compose.env.example`.
 | `guest_net` | External | guest (Tailscale sidecar ↔ RomM) |
 | `joplin` | External | notes (Joplin Server ↔ PostgreSQL) |
 | `monitor` | Bridge | monitor (Grafana ↔ Prometheus ↔ Node Exporter) |
+| `searxng_net` | Internal | search (SearXNG ↔ Valkey) |
 
 Create external networks before deploying:
 
