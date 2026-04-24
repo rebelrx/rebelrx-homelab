@@ -374,7 +374,6 @@ Commit only:
 ```bash
 cd stacks/<stack-name>
 cp .env.example .env
-cp docker-compose.env.example docker-compose.env  # if applicable
 nano .env
 nano docker-compose.env
 
