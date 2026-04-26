@@ -66,11 +66,12 @@ Built for people who want to understand their infrastructure — not just run it
 ## Quick Start
 
 ```bash
-git clone https://forgejo.tail.rebelrx.net/nima/rebelrx-homelab
+git clone https://github.com/rebelrx/rebelrx-homelab.git
 cd rebelrx-homelab/stacks/<stack>
 
 cp .env.example .env
 docker compose up -d
+```
 
 ---
 
@@ -78,9 +79,10 @@ docker compose up -d
 
 | Stack | Description | Services |
 |-------|-------------|----------|
-| [authentik](stacks/authentik/) | SSO authentication and identity management | Authentik Server, Authentik Worker, PostgreSQL |
-| [audiobooks](stacks/audiobooks/) | Audiobook and podcast media server | Audiobookshelf |
+| [template](stacks/_template/) | Boilerplate for new stacks | — |
 | [arr](stacks/arr/) | Media automation (TV, movies, music, books, comics) | Gluetun, qBittorrent, SABnzbd, Prowlarr, Sonarr, Radarr, Lidarr, LazyLibrarian, Mylar3, Bazarr, Overseerr, Whisparr |
+| [audiobooks](stacks/audiobooks/) | Audiobook and podcast media server | Audiobookshelf |
+| [authentik](stacks/authentik/) | SSO authentication and identity management | Authentik Server, Authentik Worker, PostgreSQL |
 | [backup](stacks/backup/) | Backup management | Kopia |
 | [books](stacks/books/) | Book and reading management | Calibre, Calibre-Web, Kavita |
 | [borgmatic](stacks/borgmatic/) | Local Borg backup runner with scheduled, deduplicated, encrypted backups | Borgmatic |
@@ -102,12 +104,12 @@ docker compose up -d
 | [paperless](stacks/paperless/) | Document management with OCR | Paperless-ngx, Redis, PostgreSQL, Gotenberg, Tika |
 | [pdf](stacks/pdf/) | PDF tools | BentoPDF |
 | [photo](stacks/photo/) | Photo/video management with AI | Immich Server, Immich ML, Valkey, PostgreSQL |
+| [portainer](stacks/portainer/) | Docker container management UI | Portainer |
 | [proxy](stacks/proxy/) | Reverse proxy and SSL | Nginx Proxy Manager |
 | [recipes](stacks/recipes/) | Recipe management | Mealie, PostgreSQL |
 | [roms](stacks/roms/) | ROM library management | RomM, MariaDB |
 | [search](stacks/search/) | Privacy-respecting metasearch engine | SearXNG, Valkey |
 | [speedtest](stacks/speedtest/) | Network speed monitoring | Speedtest Tracker, Librespeed |
-| [template](stacks/_template/) | Boilerplate for new stacks | — |
 | [uptime](stacks/uptime/) | Uptime monitoring | Uptime Kuma |
 | [wud](stacks/wud/) | Container update monitoring | What's Up Docker |
 
@@ -153,6 +155,7 @@ docker compose up -d
     ├── paperless/
     ├── pdf/
     ├── photo/
+    ├── portainer/
     ├── proxy/
     ├── recipes/
     ├── roms/
@@ -403,10 +406,13 @@ No application data or secrets are stored in Git.
 
 ## Environment & Assumptions
 
-- This repository assumes a private Forgejo instance for hosting
-- Access is restricted via Tailscale
-- HTTPS and personal access tokens are used for Git pushes
-- Container updates are monitored by WUD with email notifications
+These stacks were developed and tested against the following environment. They will work in other setups, but you may need to adjust accordingly:
+
+- Docker Compose v2 on Linux
+- A reverse proxy (Nginx Proxy Manager) handling all public-facing traffic
+- Services bound to `127.0.0.1` and reached only through the reverse proxy
+- Container updates monitored by WUD with email notifications
+- An NVIDIA GPU with the Container Toolkit installed (only required for the `media` and `photo` stacks)
 
 ---
 
