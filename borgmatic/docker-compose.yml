@@ -1,0 +1,24 @@
+name: borgmatic
+services:
+  # Borgmatic (Borg Backup)
+  # https://github.com/borgmatic-collective/docker-borgmatic
+  borgmatic:
+    image: ghcr.io/borgmatic-collective/borgmatic:latest
+    container_name: borgmatic
+    restart: unless-stopped
+    environment:
+      - TZ=${TIMEZONE}
+      - BORG_PASSPHRASE=${BORG_PASSPHRASE}
+      - BACKUP_CRON=0 3 * * *
+      - RUN_ON_STARTUP=false
+    volumes:
+      - ${BACKUP_SOURCE}:/mnt/source:ro
+      - ${BACKUP_REPOSITORY}:/mnt/borg-repository
+      - ${BORGMATIC_D}:/etc/borgmatic.d
+      - ${BORGMATIC_CONFIG}:/root/.config/borg
+      - ${BORGMATIC_CACHE}:/root/.cache/borg
+      - ${BORGMATIC_STATE}:/root/.local/state/borgmatic
+      - ${BORGMATIC_SSH}:/root/.ssh
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=true

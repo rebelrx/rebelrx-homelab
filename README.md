@@ -83,6 +83,7 @@ docker compose up -d
 | [arr](stacks/arr/) | Media automation (TV, movies, music, books, comics) | Gluetun, qBittorrent, SABnzbd, Prowlarr, Sonarr, Radarr, Lidarr, LazyLibrarian, Mylar3, Bazarr, Overseerr, Whisparr |
 | [backup](stacks/backup/) | Backup management | Kopia |
 | [books](stacks/books/) | Book and reading management | Calibre, Calibre-Web, Kavita |
+| [borgmatic](stacks/borgmatic/) | Local Borg backup runner with scheduled, deduplicated, encrypted backups | Borgmatic |
 | [cloudflared](stacks/cloudflared/) | Cloudflare Tunnel client | Cloudflared |
 | [dns](stacks/dns/) | DNS filtering and ad blocking | AdGuard Home |
 | [dockge](stacks/dockge/) | Docker stack management UI | Dockge |
@@ -133,6 +134,7 @@ docker compose up -d
     ├── authentik/
     ├── backup/
     ├── books/
+    ├── borgmatic/
     ├── cloudflared/
     ├── dns/
     ├── dockge/
@@ -374,6 +376,7 @@ Commit only:
 ```bash
 cd stacks/<stack-name>
 cp .env.example .env
+cp docker-compose.env.example docker-compose.env  # if applicable
 nano .env
 nano docker-compose.env
 

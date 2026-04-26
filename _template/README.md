@@ -5,6 +5,10 @@ Boilerplate Docker Compose stack for quickly spinning up new services with consi
 ## Usage
 
 1. Copy this directory for your new stack.
+   ```bash
+   cp -r _template <new-stack-name>
+   cd <new-stack-name>
+   ```
 
 2. Update `docker-compose.yml`:
    - Replace the service name, image, container name, and ports
