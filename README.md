@@ -83,9 +83,8 @@ docker compose up -d
 | [arr](stacks/arr/) | Media automation (TV, movies, music, books, comics) | Gluetun, qBittorrent, SABnzbd, Prowlarr, Sonarr, Radarr, Lidarr, LazyLibrarian, Mylar3, Bazarr, Overseerr, Whisparr |
 | [audiobooks](stacks/audiobooks/) | Audiobook and podcast media server | Audiobookshelf |
 | [authentik](stacks/authentik/) | SSO authentication and identity management | Authentik Server, Authentik Worker, PostgreSQL |
-| [backup](stacks/backup/) | Backup management | Kopia |
+| [backup](stacks/backup/) | Backup management (NAS/remote and local Borg) | Kopia, Borgmatic |
 | [books](stacks/books/) | Book and reading management | Calibre, Calibre-Web, Kavita |
-| [borgmatic](stacks/borgmatic/) | Local Borg backup runner with scheduled, deduplicated, encrypted backups | Borgmatic |
 | [cloudflared](stacks/cloudflared/) | Cloudflare Tunnel client | Cloudflared |
 | [dns](stacks/dns/) | DNS filtering and ad blocking | AdGuard Home |
 | [dockge](stacks/dockge/) | Docker stack management UI | Dockge |
@@ -136,7 +135,6 @@ docker compose up -d
     ├── authentik/
     ├── backup/
     ├── books/
-    ├── borgmatic/
     ├── cloudflared/
     ├── dns/
     ├── dockge/
