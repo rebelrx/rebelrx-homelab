@@ -1,0 +1,34 @@
+name: nextcloud-aio
+services:
+  # Nextcloud-AIO (Cloud Storage)
+  # https://github.com/nextcloud/all-in-one
+  nextcloud-aio-mastercontainer:
+    image: ghcr.io/nextcloud-releases/all-in-one:latest
+    container_name: nextcloud-aio-mastercontainer
+    restart: unless-stopped
+    init: true
+    ports:
+      - 127.0.0.1:${AIO_MANAGEMENT_PORT}:8080
+    environment:
+      - NEXTCLOUD_DATADIR=${NEXTCLOUD_DATADIR}
+      - NEXTCLOUD_MOUNT=/mnt
+      - APACHE_PORT=${APACHE_PORT}
+      - APACHE_IP_BINDING=${APACHE_IP_BINDING}
+      - SKIP_DOMAIN_VALIDATION=${SKIP_DOMAIN_VALIDATION}
+      - NEXTCLOUD_ENABLE_NVIDIA_GPU=true
+    volumes:
+      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /mnt:/mnt:rw
+    networks:
+      - nextcloud-aio
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+volumes:
+  nextcloud_aio_mastercontainer:
+    name: nextcloud_aio_mastercontainer
+networks:
+  nextcloud-aio:
+    external: true
+    name: nextcloud-aio

@@ -1,0 +1,29 @@
+name: homepage
+services:
+  # Homepage (Dashboard)
+  # https://gethomepage.dev/installation/docker/
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - ${HOMEPAGE_PORT}:3000
+    env_file:
+      - .env
+    environment:
+      - TZ=${TIMEZONE}
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
+    volumes:
+      - ${HOMEPAGE_CONFIG}:/app/config
+      - ${HOMEPAGE_ICONS}:/app/public/icons
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

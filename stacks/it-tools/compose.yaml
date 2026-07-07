@@ -1,0 +1,20 @@
+name: it-tools
+services:
+  # IT-Tools (Dev Tools)
+  # https://github.com/sharevb/it-tools
+  it-tools:
+    image: ghcr.io/sharevb/it-tools:v2026.1.4
+    container_name: it-tools
+    restart: unless-stopped
+    ports:
+      - ${IT_TOOLS_HTTP_PORT}:8080
+    security_opt:
+      - "no-new-privileges:true"
+    cap_drop:
+      - ALL
+    networks:
+      - proxy_net
+
+networks:
+  proxy_net:
+    external: true

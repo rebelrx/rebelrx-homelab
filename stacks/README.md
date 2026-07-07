@@ -12,7 +12,6 @@ Designed to be **secure**, **portable**, **reproducible**, and **easy to recover
 <p align="center">
   <a href="https://docs.rebelrx.tech"><strong>📚 View Guides</strong></a> •
   <a href="#stacks"><strong>📦 Stacks</strong></a> •
-  <a href="#host-configuration"><strong>🖥️ Host Configuration</strong></a> •
   <a href="#quick-start"><strong>🚀 Getting Started</strong></a>
 </p>
 
@@ -55,7 +54,7 @@ All sensitive data has been removed or generalized. Use the provided `.env.examp
 - Secrets never enter Git
 - Runtime data is never versioned
 - Each stack is self-contained
-- **No host ports by default** — access is via the reverse proxy
+- **Web UIs published on all interfaces by default** — reachable on your LAN out of the box; prefix a mapping with `127.0.0.1:` to keep it behind the reverse proxy only
 
 This allows the entire homelab to be restored quickly by cloning this repo and recreating only the local `.env` files.
 
@@ -100,11 +99,13 @@ docker compose up -d
 | [backup](stacks/backup/) | Backup management (NAS/remote and local Borg) | Kopia, Borgmatic |
 | [bentopdf](stacks/bentopdf/) | PDF tools | BentoPDF |
 | [books](stacks/books/) | Book and reading management | Calibre, Calibre-Web, Kavita |
+| [cloudflared](stacks/cloudflared/) | Cloudflare Tunnel for outbound-only public access | cloudflared |
 | [dockge](stacks/dockge/) | Docker stack management UI | Dockge |
 | [documenso](stacks/documenso/) | Document signing platform | Documenso, PostgreSQL |
 | [drawio](stacks/drawio/) | Diagramming and flowcharts | draw.io |
 | [filebrowser](stacks/filebrowser/) | Web-based file management | Filebrowser Quantum |
 | [forgejo](stacks/forgejo/) | Self-hosted Git server with CI runners | Forgejo, PostgreSQL, Forgejo Runner, Docker-in-Docker |
+| [glances](stacks/glances/) | System + GPU metrics exporter (host networking → Home Assistant) | Glances |
 | [guest](stacks/guest/) | Tailscale sidecar for guest access | Tailscale (RomM) |
 | [homebox](stacks/homebox/) | Home inventory management | Homebox |
 | [homepage](stacks/homepage/) | Service dashboard | Homepage |
@@ -113,6 +114,7 @@ docker compose up -d
 | [jellyfin](stacks/jellyfin/) | Media server with NVIDIA GPU transcoding | Jellyfin |
 | [joplin](stacks/joplin/) | Note sync server | Joplin Server, PostgreSQL |
 | [mealie](stacks/mealie/) | Recipe management | Mealie, PostgreSQL |
+| [mkdocs](stacks/mkdocs/) | Documentation site publishing | Material for MkDocs, Nginx |
 | [monitor](stacks/monitor/) | Infrastructure monitoring | Grafana, Prometheus, Node Exporter |
 | [navidrome](stacks/navidrome/) | Music server with Subsonic API | Navidrome |
 | [nextcloud-aio](stacks/nextcloud-aio/) | Cloud storage and collaboration | Nextcloud AIO |
@@ -134,20 +136,6 @@ docker compose up -d
 
 ---
 
-## Host Configuration
-
-System-level configuration files are tracked under `system/`, organized by hostname. These mirror their on-disk paths under `/etc` and are versioned for documentation and disaster recovery. They are **not** automatically deployed — apply changes manually as documented in each host's README.
-
-> In this public mirror, host-specific values (LAN IPs, NFS server addresses,
-> mount targets) are replaced with placeholders or committed as `*.example`
-> files. Copy them to their real paths and fill in your own values.
-
-| Host | Description | Tracked Configs |
-|------|-------------|-----------------|
-| [primary-host](system/) | Debian 13 / mini-PC — primary Docker host | `fstab.example`, `docker.service.d/override.conf`, `sysctl.d/99-tailscale-bind.conf` |
-
----
-
 ## Directory Layout
 
 On the live host, compose files live at `/opt/stacks/<stack>/` and persistent data at `/opt/data/<stack>/`. The repo's `stacks/` tree mirrors the compose-file layout only.
@@ -158,61 +146,56 @@ On the live host, compose files live at `/opt/stacks/<stack>/` and persistent da
 ├── .pre-commit-config.yaml
 ├── .secrets.baseline
 ├── README.md
-├── stacks/
-│   ├── _template/
-│   │   ├── compose.yaml
-│   │   ├── .env.example
-│   │   └── README.md
-│   ├── actualbudget/
-│   │   ├── compose.yaml
-│   │   ├── .env.example
-│   │   └── README.md
-│   ├── adguardhome/
-│   ├── arr/
-│   ├── audiobooks/
-│   ├── authentik/
-│   ├── backup/
-│   ├── bentopdf/
-│   ├── books/
-│   ├── dockge/
-│   ├── documenso/
-│   ├── drawio/
-│   ├── filebrowser/
-│   ├── forgejo/
-│   ├── guest/
-│   ├── homebox/
-│   ├── homepage/
-│   ├── immich/
-│   ├── it-tools/
-│   ├── jellyfin/
-│   ├── joplin/
-│   ├── mealie/
-│   ├── monitor/
-│   ├── navidrome/
-│   ├── nextcloud-aio/
-│   ├── npm/
-│   ├── open-webui/
-│   ├── paperless/
-│   ├── plex/
-│   ├── portainer/
-│   ├── project-nomad/
-│   ├── romm/
-│   ├── seafile/
-│   ├── searxng/
-│   ├── snapotter/
-│   ├── sparkyfitness/
-│   ├── speedtest/
-│   ├── trilium/
-│   ├── uptime/
-│   └── wud/
-└── system/
-    └── <hostname>/
-        ├── README.md
-        ├── fstab.example
-        ├── docker.service.d/
-        │   └── override.conf
-        └── sysctl.d/
-            └── 99-tailscale-bind.conf
+└── stacks/
+    ├── _template/
+    │   ├── compose.yaml
+    │   ├── .env.example
+    │   └── README.md
+    ├── actualbudget/
+    │   ├── compose.yaml
+    │   ├── .env.example
+    │   └── README.md
+    ├── adguardhome/
+    ├── arr/
+    ├── audiobooks/
+    ├── authentik/
+    ├── backup/
+    ├── bentopdf/
+    ├── books/
+    ├── cloudflared/
+    ├── dockge/
+    ├── documenso/
+    ├── drawio/
+    ├── filebrowser/
+    ├── forgejo/
+    ├── glances/
+    ├── guest/
+    ├── homebox/
+    ├── homepage/
+    ├── immich/
+    ├── it-tools/
+    ├── jellyfin/
+    ├── joplin/
+    ├── mealie/
+    ├── mkdocs/
+    ├── monitor/
+    ├── navidrome/
+    ├── nextcloud-aio/
+    ├── npm/
+    ├── open-webui/
+    ├── paperless/
+    ├── plex/
+    ├── portainer/
+    ├── project-nomad/
+    ├── romm/
+    ├── seafile/
+    ├── searxng/
+    ├── snapotter/
+    ├── sparkyfitness/
+    ├── speedtest/
+    ├── trilium/
+    ├── uptime/
+    └── wud/
 ```
 
 Each stack directory contains at minimum:
@@ -221,7 +204,14 @@ Each stack directory contains at minimum:
 - `.env.example` — template for required environment variables
 - `README.md` — full documentation (services, env vars, ports, deployment)
 
-Some stacks also include `docker-compose.env.example` for container-level secrets (currently: `paperless`).
+Some stacks ship additional committed files (copied into place at deploy time):
+
+- `paperless` — `docker-compose.env.example` (container-level secrets, passed via `env_file:`)
+- `filebrowser` — `config.yaml.example` (app config)
+- `monitor` — `prometheus.yml.example` (Prometheus scrape config)
+- `romm` — `config.yml.example` (optional advanced settings)
+- `mkdocs` — `Dockerfile` (extends the base image with the i18n plugin)
+- `glances` — `glances.conf` (committed directly, not as `.example` — it's mounted read-only into the container and contains no secrets)
 
 ---
 
@@ -260,27 +250,39 @@ List/array syntax for all environment variables:
       - PUID=${PUID}
 ```
 
-### Port Bindings (Proxy-Only by Default)
+### Port Bindings
 
-Most stacks publish **no host ports at all** — they attach to `proxy_net` and
-are reached exclusively via Nginx Proxy Manager using the container name as
-the upstream host.
+Each stack's primary web UI is published on **all interfaces** by default
+(`${STACK_PORT}:containerport`), so it's reachable on your LAN out of the box —
+whether or not you run a reverse proxy. Every stack that publishes a port also
+documents the one-line change to restrict it: prefix the mapping with
+`127.0.0.1:` to keep it loopback-only (behind the reverse proxy), or bind it to
+a specific interface.
 
-Host ports are only published when there's a concrete reason:
+> This is a deliberate difference from the private origin repo, which was
+> proxy-only. The public stacks publish so they work standalone; the reverse
+> proxy remains fully supported (NPM reaches services by container DNS on
+> `proxy_net`, independent of host-port publishing).
+
+**Internal-only services never publish a host port** — databases, Redis/Valkey,
+Prometheus + node-exporter, Gotenberg/Tika, and message brokers stay on their
+stack's internal network, reachable only by the app that needs them.
+
+Some stacks use a deliberately different binding:
 
 | Stack | Bound | Reason |
 |-------|-------|--------|
 | `npm` | `0.0.0.0:80`, `0.0.0.0:443`, `127.0.0.1:81` | Public reverse-proxy entrypoints; admin UI loopback-only |
 | `adguardhome` | `0.0.0.0:53/tcp+udp` | LAN DNS resolver; must be reachable by clients |
-| `jellyfin` | `0.0.0.0:${JELLYFIN_HTTP_PORT}` | LAN-reachable HTTP for TVs and streaming boxes that can't be pointed at NPM |
 | `plex` | `network_mode: host` | DLNA, GDM discovery, and Plex's port-mapping behavior |
-| `nextcloud-aio` | `${AIO_MANAGEMENT_PORT}:8080` | AIO mastercontainer setup UI |
+| `glances` | `network_mode: host` | Host-accurate metrics; the listener is UFW-gated on the LAN |
+| `nextcloud-aio` | `127.0.0.1:${AIO_MANAGEMENT_PORT}:8080` | Powerful mastercontainer admin UI — loopback-only; reach via SSH tunnel or NPM |
+| `sparkyfitness` | frontend all-interfaces; MCP `127.0.0.1:${SPARKY_FITNESS_MCP_PORT}:3001` | MCP is an authenticated API into the full health dataset — loopback-only; the frontend publishes normally |
 | `seafile` | `${TAILSCALE_IP}:8088` | Bound to the `tailscale0` interface so the public-edge VPS (running Caddy) can reach it over the tailnet. Not reachable from LAN or the public internet. |
 | `documenso` | `${TAILSCALE_IP}:3000` | Same pattern — tailnet-only bind for the public-edge VPS to reach |
-| `sparkyfitness` | `127.0.0.1:3004`, `127.0.0.1:3001` | Frontend and MCP loopback-only; NPM proxies frontend |
+| `snapotter` | none (proxy-only) | App's internal port unconfirmed upstream; left unpublished with a documented one-liner to publish once known |
 
-When a port _is_ published, it is loopback-bound (`127.0.0.1:`) unless it
-genuinely needs to reach the LAN or the tailnet. All port mappings are quoted strings.
+All port mappings are quoted strings where YAML could otherwise coerce the value.
 
 ### Hardening Defaults
 
@@ -300,6 +302,16 @@ Notable exceptions:
   Toolkit compatibility on some driver versions).
 - **`forgejo-dind`** — runs `privileged: true` because it provides the Docker
   daemon backing CI runners. Scoped to the internal `forgejo` network.
+- **`immich-machine-learning`** — `no-new-privileges` omitted; the CUDA stack
+  can conflict with the flag on some driver versions (the other Immich services
+  keep it).
+- **Upstream-managed stacks** (`project-nomad`, `sparkyfitness`) ship their own
+  multi-service composes; hardening follows upstream and is left as-is to avoid
+  breakage — for `project-nomad`, also because its self-updater rewrites the
+  compose in place. `snapotter` rolled back `no-new-privileges` / `cap_drop`
+  after runtime issues (documented in its README).
+- **`open-webui`** runs as root by upstream design, so `cap_drop` isn't
+  applicable — but it keeps `no-new-privileges`.
 
 The `searxng` and `searxng-valkey` containers go further with `cap_drop: ALL`
 plus a minimal `cap_add` allowlist (`CHOWN`, `SETGID`, `SETUID`, and
@@ -520,7 +532,8 @@ docker network create nextcloud-aio
 Most proxied services use the local **Nginx Proxy Manager** (`npm` stack) on the home machine:
 
 - Services attach to the shared `proxy_net` external network
-- Services do **not** publish host ports; access is via container DNS inside `proxy_net`
+- NPM reaches each service by container DNS inside `proxy_net` (container name + container port) — independent of any host-port publishing
+- Services also publish their web UI on the host for direct LAN access (see [Port Bindings](#port-bindings)); prefix a mapping with `127.0.0.1:` to make NPM the only path
 - Termination and SSL are handled by NPM
 - NPM upstream config: container name as host, container port, HTTP scheme
 
@@ -604,7 +617,7 @@ To restore this homelab on a new machine:
 3. Install Tailscale and join the tailnet (required for the `seafile` and `documenso` stacks' port binds)
 4. Clone this repository to `/opt/stacks/`
 5. Create external Docker networks (`proxy_net`, `media_net`, `guest_net`, `nextcloud-aio`)
-6. Apply system-level configs from `system/<hostname>/` (including the `ip_nonlocal_bind` sysctl required for `seafile`)
+6. Apply any host-level settings the stacks reference — notably the `net.ipv4.ip_nonlocal_bind=1` sysctl required for `seafile`'s (and `documenso`'s) Tailscale-IP port bind (see those stack READMEs)
 7. Recreate `.env` and `docker-compose.env` files from `.example` templates
 8. Restore application data from Kopia / Borgmatic backups
 9. Run `docker compose up -d` in each stack directory

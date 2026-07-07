@@ -1,0 +1,83 @@
+name: snapotter
+services:
+  # SnapOtter (File Processing)
+  # https://docs.snapotter.com/guide/getting-started.html
+  snapotter:
+    image: snapotter/snapotter:latest
+    container_name: snapotter
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - AUTH_ENABLED=true
+      - DEFAULT_USERNAME=${SNAPOTTER_ADMIN_USER}
+      - DEFAULT_PASSWORD=${SNAPOTTER_ADMIN_PASSWORD}
+      - DATABASE_URL=postgres://snapotter:${SNAPOTTER_DB_PASSWORD}@postgres:5432/snapotter
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ${SNAPOTTER_DATA_PATH}:/data
+    networks:
+      - snapotter
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Postgres (Database)
+  postgres:
+    image: postgres:17-alpine
+    container_name: snapotter-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=snapotter
+      - POSTGRES_PASSWORD=${SNAPOTTER_DB_PASSWORD}
+      - POSTGRES_DB=snapotter
+    volumes:
+      - ${SNAPOTTER_DB_PATH}:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U snapotter
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - snapotter
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Redis (Cache)
+  redis:
+    image: redis:8-alpine
+    container_name: snapotter-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --maxmemory-policy
+      - noeviction
+      - --appendonly
+      - "yes"
+    volumes:
+      - ${SNAPOTTER_CACHE_PATH}:/data
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - snapotter
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  snapotter:
+    name: snapotter
+    driver: bridge
+    internal: true
+  proxy_net:
+    external: true

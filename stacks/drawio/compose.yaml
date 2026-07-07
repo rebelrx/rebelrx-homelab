@@ -1,0 +1,31 @@
+name: drawio
+services:
+  # Draw.io (Diagrams)
+  # https://github.com/jgraph/docker-drawio
+  drawio:
+    image: jgraph/drawio:latest
+    container_name: drawio
+    restart: unless-stopped
+    ports:
+      - ${DRAWIO_PORT}:8080
+    environment:
+      - DRAWIO_BASE_URL=${DRAWIO_BASE_URL}
+    networks:
+      - proxy_net
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS http://localhost:8080 || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+
+networks:
+  proxy_net:
+    external: true

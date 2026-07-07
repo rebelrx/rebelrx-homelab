@@ -1,0 +1,41 @@
+# Secrets
+
+.env
+**/.env
+docker-compose.env
+*.env.local
+*.env.private
+*.secret
+secrets/
+**/secrets/
+
+*.key
+*.pem
+*.pfx
+
+# Allow examples
+!.env.example
+!**/.env.example
+!docker-compose.env.example
+
+# App data (runtime)
+
+**/data/
+**/config/
+**/db/
+**/logs/
+**/cache/
+**/backups/
+**/uploads/
+
+# OS / editor junk
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Docker Compose overrides
+
+docker-compose.override.yml
+**/docker-compose.override.yml

@@ -1,0 +1,85 @@
+name: documenso
+services:
+  # Documenso
+  # https://docs.documenso.com/docs/self-hosting
+  documenso:
+    image: docker.io/documenso/documenso:latest
+    container_name: documenso
+    restart: unless-stopped
+    depends_on:
+      documenso-db:
+        condition: service_healthy
+    ports:
+      - ${TAILSCALE_IP}:3000:3000
+    environment:
+      - DOCUMENSO_DISABLE_TELEMETRY=true
+      - NEXT_PUBLIC_DISABLE_SIGNUP=true
+      - NEXTAUTH_URL=${NEXT_PUBLIC_WEBAPP_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXT_PRIVATE_ENCRYPTION_KEY=${NEXT_PRIVATE_ENCRYPTION_KEY}
+      - NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY=${NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY}
+      - NEXT_PUBLIC_WEBAPP_URL=${NEXT_PUBLIC_WEBAPP_URL}
+      - NEXT_PRIVATE_INTERNAL_WEBAPP_URL=${NEXT_PRIVATE_INTERNAL_WEBAPP_URL}
+      - NEXT_PRIVATE_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@documenso-db:5432/${POSTGRES_DB}
+      - NEXT_PRIVATE_DIRECT_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@documenso-db:5432/${POSTGRES_DB}
+      - NEXT_PRIVATE_SMTP_TRANSPORT=smtp-auth
+      - NEXT_PRIVATE_SMTP_HOST=${NEXT_PRIVATE_SMTP_HOST}
+      - NEXT_PRIVATE_SMTP_PORT=${NEXT_PRIVATE_SMTP_PORT}
+      - NEXT_PRIVATE_SMTP_USERNAME=${NEXT_PRIVATE_SMTP_USERNAME}
+      - NEXT_PRIVATE_SMTP_PASSWORD=${NEXT_PRIVATE_SMTP_PASSWORD}
+      - NEXT_PRIVATE_SMTP_FROM_NAME=${NEXT_PRIVATE_SMTP_FROM_NAME}
+      - NEXT_PRIVATE_SMTP_FROM_ADDRESS=${NEXT_PRIVATE_SMTP_FROM_ADDRESS}
+      - NEXT_PRIVATE_SIGNING_TRANSPORT=${NEXT_PRIVATE_SIGNING_TRANSPORT}
+      - NEXT_PRIVATE_SIGNING_LOCAL_FILE_PATH=${NEXT_PRIVATE_SIGNING_LOCAL_FILE_PATH}
+      - NEXT_PRIVATE_SIGNING_PASSPHRASE=${NEXT_PRIVATE_SIGNING_PASSPHRASE}
+    volumes:
+      - ${DOCUMENSO_CERT}:/opt/documenso/cert.p12:ro
+    networks:
+      - proxy_net
+      - documenso
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - -q
+        - http://127.0.0.1:3000/api/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    labels:
+      - wud.watch=true
+      - wud.tag.include=^latest$$
+  # PostgreSQL (Database)
+  documenso-db:
+    image: docker.io/library/postgres:15
+    container_name: documenso-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ${DOCUMENSO_DB}:/var/lib/postgresql/data
+    networks:
+      - documenso
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  documenso:
+    driver: bridge
+  proxy_net:
+    external: true

@@ -1,0 +1,42 @@
+name: open-webui
+services:
+  # Open WebUI (LLM front-end)
+  # https://docs.openwebui.com/
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:latest
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - ${OPENWEBUI_PORT}:8080
+    environment:
+      - TZ=${TIMEZONE}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN}
+      - ENABLE_SIGNUP=${ENABLE_SIGNUP}
+      - USER_AGENT=${USER_AGENT}
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - ${OPENWEBUI_DATA_PATH}:/app/backend/data
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - http://localhost:8080/health
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

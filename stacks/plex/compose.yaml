@@ -1,0 +1,46 @@
+name: plex
+services:
+  # Plex (Media Server)
+  # https://hub.docker.com/r/linuxserver/plex
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    restart: unless-stopped
+    runtime: nvidia
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    volumes:
+      - ${PLEX_CONFIG}:/config
+      - ${PLEX_MOVIES}:/movies
+      - ${PLEX_TV}:/tv
+      - ${PLEX_MUSIC}:/music
+      - ${PLEX_TRANSCODE}:/transcode
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - -q
+        - http://127.0.0.1:32400/identity
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false

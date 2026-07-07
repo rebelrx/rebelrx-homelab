@@ -1,0 +1,37 @@
+name: filebrowser
+services:
+  # Filebrowser Quantum (File Management)
+  # https://github.com/gtsteffaniak/filebrowser/wiki/Getting-Started
+  filebrowser:
+    image: docker.io/gtstef/filebrowser:stable
+    container_name: filebrowserquantum
+    restart: unless-stopped
+    ports:
+      - ${FILEBROWSER_PORT}:80
+    environment:
+      - TZ=${TIMEZONE}
+      - FILEBROWSER_CONFIG=data/config.yaml
+    volumes:
+      - ${FILEBROWSER_HOME_PATH}:/hosthome
+      - ${FILEBROWSER_SRV_PATH}:/srv
+      - ${FILEBROWSER_OPT_PATH}:/opt
+      - ${FILEBROWSER_DATA_PATH}:/home/filebrowser/data
+      - ${FILEBROWSER_TMP_PATH}:/home/filebrowser/tmp/
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --quiet --tries=1 --spider http://127.0.0.1:80/ || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

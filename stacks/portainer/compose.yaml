@@ -1,0 +1,23 @@
+name: portainer
+services:
+  # Portainer (Docker Container Manager)
+  # https://docs.portainer.io/start/install/server/docker/linux
+  portainer:
+    image: docker.io/portainer/portainer-ee:sts
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - ${PORTAINER_PORT}:9443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PORTAINER_DATA}:/data
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

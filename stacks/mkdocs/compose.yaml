@@ -1,0 +1,43 @@
+name: mkdocs
+services:
+  # Material for MkDocs (live-preview dev server)
+  # https://squidfunk.github.io/mkdocs-material/getting-started/
+  mkdocs:
+    image: docker.io/squidfunk/mkdocs-material
+    build: .
+    container_name: mkdocs
+    user: 1000:1000
+    restart: unless-stopped
+    ports:
+      - ${MKDOCS_PORT}:8000
+    volumes:
+      - ${MKDOCS_PROJECT_PATH}:/docs
+    stdin_open: true
+    tty: true
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Nginx (serves the built static site)
+  # https://hub.docker.com/_/nginx
+  mkdocs-web:
+    image: docker.io/library/nginx:alpine
+    container_name: mkdocs-web
+    restart: unless-stopped
+    ports:
+      - ${MKDOCS_WEB_PORT}:80
+    volumes:
+      - ${MKDOCS_SITE}:/usr/share/nginx/html:ro
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

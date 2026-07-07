@@ -1,0 +1,38 @@
+name: adguardhome
+services:
+  # AdGuard Home (DNS Filter)
+  # https://hub.docker.com/r/adguard/adguardhome
+  adguardhome:
+    image: docker.io/adguard/adguardhome:latest
+    container_name: adguardhome
+    restart: unless-stopped
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - ${ADGUARD_WEBUI_PORT}:3000
+      - ${ADGUARD_TLS_PORT}:853
+      - ${ADGUARD_HTTPS_PORT}:443
+    volumes:
+      - ${ADGUARD_WORK}:/opt/adguardhome/work
+      - ${ADGUARD_CONF}:/opt/adguardhome/conf
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - -q
+        - http://127.0.0.1:3000/
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

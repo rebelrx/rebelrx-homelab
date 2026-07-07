@@ -1,0 +1,34 @@
+name: actualbudget
+services:
+  # Actual Budget (Finance)
+  # https://actualbudget.org/docs/install/docker/
+  actual_server:
+    image: docker.io/actualbudget/actual-server:latest
+    container_name: actual
+    restart: unless-stopped
+    ports:
+      - ${ACTUAL_PORT}:5006
+    volumes:
+      - ${ACTUAL_DATA_PATH}:/data
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:5006/health', r =>
+          process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () =>
+          process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

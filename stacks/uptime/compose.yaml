@@ -1,0 +1,26 @@
+name: uptime
+services:
+  # Uptime Kuma (Uptime Monitoring)
+  # https://uptimekuma.org/install-uptime-kuma-docker/
+  uptime-kuma:
+    image: docker.io/louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: unless-stopped
+    ports:
+      - ${UPTIME_PORT}:3001
+    environment:
+      - TZ=${TIMEZONE}
+      - UMASK=0022
+    volumes:
+      - ${UPTIME_DATA}:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

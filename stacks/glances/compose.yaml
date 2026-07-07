@@ -1,0 +1,52 @@
+name: glances
+services:
+  # Glances (Monitoring)
+  # https://github.com/nicolargo/glances/tree/develop
+  glances:
+    image: nicolargo/glances:ubuntu-latest-full
+    container_name: glances
+    restart: unless-stopped
+    pid: host
+    network_mode: host
+    read_only: true
+    privileged: false
+    environment:
+      - TZ=${TIMEZONE}
+      - GLANCES_OPT=-w -C /etc/glances/glances.conf
+      - PYTHONPYCACHEPREFIX=/tmp/py_caches
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+      - ./glances.conf:/etc/glances/glances.conf:ro
+      - type: bind
+        source: /
+        target: /rootfs
+        read_only: true
+        bind:
+          recursive: disabled
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:61208/api/4/status
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks: {}

@@ -1,0 +1,102 @@
+name: immich
+services:
+  # Immich (Photo storage)
+  # https://immich.app/docs/install/docker-compose/
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    container_name: immich-server
+    restart: unless-stopped
+    extends:
+      file: hwaccel.transcoding.yml
+      service: nvenc
+    depends_on:
+      - redis
+      - database
+    ports:
+      - ${IMMICH_HOST_PORT}:2283
+    env_file:
+      - .env
+    volumes:
+      - ${UPLOAD_LOCATION}:/data
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - proxy_net
+      - immich
+    healthcheck:
+      disable: false
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Immich Machine Learning (AI/ML)
+  # https://immich.app/docs/features/ml-hardware-acceleration
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}-cuda
+    container_name: immich-machine-learning
+    restart: unless-stopped
+    extends:
+      file: hwaccel.ml.yml
+      service: cuda
+    env_file:
+      - .env
+    volumes:
+      - ${IMMICH_CACHE}:/cache
+    networks:
+      - immich
+    healthcheck:
+      disable: false
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Valkey (Redis Cache)
+  redis:
+    image: docker.io/valkey/valkey:9@sha256:3eeb09785cd61ec8e3be35f8804c8892080f3ca21934d628abc24ee4ed1698f6
+    container_name: immich-redis
+    restart: unless-stopped
+    networks:
+      - immich
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: redis-cli ping || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # PostgreSQL + pgvecto.rs (Database)
+  database:
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    container_name: immich-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB=${DB_DATABASE_NAME}
+      - POSTGRES_INITDB_ARGS=--data-checksums
+    volumes:
+      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+    networks:
+      - immich
+    shm_size: 128mb
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE_NAME}
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  immich:
+    driver: bridge
+  proxy_net:
+    external: true

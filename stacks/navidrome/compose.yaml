@@ -1,0 +1,36 @@
+name: navidrome
+services:
+  # Navidrome (Music Server)
+  # https://www.navidrome.org/docs/installation/docker/
+  navidrome:
+    image: docker.io/deluan/navidrome:latest
+    container_name: navidrome
+    restart: unless-stopped
+    user: 1000:1000
+    ports:
+      - ${NAVIDROME_PORT}:4533
+    environment:
+      - ND_LISTENBRAINZ_ENABLED=true
+      - ND_ENABLEINSIGHTSCOLLECTOR=false
+    volumes:
+      - ${NAVIDROME_DATA_PATH}:/data
+      - ${NAVIDROME_MUSIC_PATH}:/music:ro
+    networks:
+      - proxy_net
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - --spider
+        - http://localhost:4533/ping
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

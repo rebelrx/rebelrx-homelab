@@ -1,0 +1,24 @@
+name: trilium
+services:
+  # Trilium Notes (Note Taking)
+  # https://github.com/TriliumNext/Trilium
+  trilium:
+    image: docker.io/triliumnext/trilium:latest
+    container_name: trilium
+    restart: unless-stopped
+    ports:
+      - ${TRILIUM_PORT}:8080
+    environment:
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${TRILIUM_DATA_DIR}:/home/node/trilium-data
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

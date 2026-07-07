@@ -1,0 +1,21 @@
+name: cloudflared
+services:
+  # Cloudflare Tunnel Client (outbound-only ingress tunnel)
+  # https://github.com/cloudflare/cloudflared
+  cloudflared:
+    image: docker.io/cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:?tunnel token required}
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

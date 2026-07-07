@@ -1,0 +1,113 @@
+name: seafile
+services:
+  # Seafile (Cloud Storage)
+  # https://manual.seafile.com/13.0/setup/setup_ce_by_docker/#getting-started
+  seafile:
+    image: seafileltd/seafile-mc:13.0-latest
+    container_name: seafile
+    restart: unless-stopped
+    ports:
+      - ${TAILSCALE_IP}:8088:80
+    environment:
+      # --- Database ---
+      - SEAFILE_MYSQL_DB_HOST=db
+      - SEAFILE_MYSQL_DB_PORT=3306
+      - SEAFILE_MYSQL_DB_USER=seafile
+      - SEAFILE_MYSQL_DB_PASSWORD=${SEAFILE_MYSQL_DB_PASSWORD}
+      - INIT_SEAFILE_MYSQL_ROOT_PASSWORD=${INIT_SEAFILE_MYSQL_ROOT_PASSWORD}
+      - SEAFILE_MYSQL_DB_CCNET_DB_NAME=ccnet_db
+      - SEAFILE_MYSQL_DB_SEAFILE_DB_NAME=seafile_db
+      - SEAFILE_MYSQL_DB_SEAHUB_DB_NAME=seahub_db
+      # --- Cache ---
+      - CACHE_PROVIDER=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      # --- Server identity ---
+      - TIME_ZONE=${TIME_ZONE:-Etc/UTC}
+      - SEAFILE_SERVER_HOSTNAME=${SEAFILE_SERVER_HOSTNAME}
+      - SEAFILE_SERVER_PROTOCOL=${SEAFILE_SERVER_PROTOCOL:-https}
+      - SITE_ROOT=/
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+      # --- Initial admin (only used on first boot) ---
+      - INIT_SEAFILE_ADMIN_EMAIL=${INIT_SEAFILE_ADMIN_EMAIL}
+      - INIT_SEAFILE_ADMIN_PASSWORD=${INIT_SEAFILE_ADMIN_PASSWORD}
+      # --- Features ---
+      - NON_ROOT=false
+      - SEAFILE_LOG_TO_STDOUT=false
+      - ENABLE_GO_FILESERVER=true
+      - ENABLE_SEADOC=false
+      - ENABLE_NOTIFICATION_SERVER=false
+      - ENABLE_SEAFILE_AI=false
+      - ENABLE_FACE_RECOGNITION=false
+      - MD_FILE_COUNT_LIMIT=100000
+    volumes:
+      - ${SEAFILE_DATA_PATH}:/shared
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:80 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - seafile-net
+      - proxy_net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # MySQL (Seafile Database)
+  db:
+    image: mariadb:10.11
+    container_name: seafile-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${INIT_SEAFILE_MYSQL_ROOT_PASSWORD}
+      - MYSQL_LOG_CONSOLE=true
+      - MARIADB_AUTO_UPGRADE=1
+    volumes:
+      - ${SEAFILE_MYSQL_PATH}:/var/lib/mysql
+    networks:
+      - seafile-net
+    healthcheck:
+      test:
+        - CMD
+        - /usr/local/bin/healthcheck.sh
+        - --connect
+        - --mariadbupgrade
+        - --innodb_initialized
+      interval: 20s
+      start_period: 30s
+      timeout: 5s
+      retries: 10
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Redis (Seafile Cache)
+  redis:
+    image: redis:7-alpine
+    container_name: seafile-redis
+    restart: unless-stopped
+    command:
+      - /bin/sh
+      - -c
+      - redis-server --requirepass "$$REDIS_PASSWORD"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    networks:
+      - seafile-net
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  seafile-net:
+    name: seafile-net
+    driver: bridge
+  proxy_net:
+    external: true

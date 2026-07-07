@@ -1,0 +1,72 @@
+name: backup
+services:
+  # Kopia (NAS / Remote Backup)
+  # https://kopia.io/docs/installation/#docker-images
+  kopia:
+    image: docker.io/kopia/kopia:latest
+    container_name: kopia
+    hostname: ${KOPIA_HOSTNAME:-docker-host}
+    restart: unless-stopped
+    command:
+      - server
+      - start
+      - --disable-csrf-token-checks
+      - --insecure
+      - --address=0.0.0.0:51515
+      - --server-username=${KOPIA_UI_USER}
+      - --server-password=${KOPIA_UI_PASS}
+    ports:
+      - ${KOPIA_UI_PORT}:51515
+    environment:
+      - KOPIA_PASSWORD=${KOPIA_PASSWORD}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${KOPIA_CONFIG_PATH}:/app/config
+      - ${KOPIA_CACHE_PATH}:/app/cache
+      - ${KOPIA_LOG_PATH}:/app/logs
+      - ${KOPIA_LOCAL_PATH}:/data:ro
+      - ${KOPIA_REPOSITORY_PATH}:/repository
+      - ${KOPIA_TMP_PATH}:/tmp:shared
+    networks:
+      - proxy_net
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:51515/ | grep
+          -qE '^(200|401)$'
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+  # Borgmatic (Borg Local Backup)
+  # https://github.com/borgmatic-collective/docker-borgmatic
+  borgmatic:
+    image: ghcr.io/borgmatic-collective/borgmatic:latest
+    container_name: borgmatic
+    restart: unless-stopped
+    environment:
+      - TZ=${TIMEZONE}
+      - BORG_PASSPHRASE=${BORG_PASSPHRASE}
+      - BACKUP_CRON=0 3 * * *
+      - RUN_ON_STARTUP=false
+    volumes:
+      - ${BACKUP_SOURCE}:/mnt/source:ro
+      - ${BACKUP_REPOSITORY}:/mnt/borg-repository
+      - ${BORGMATIC_D}:/etc/borgmatic.d
+      - ${BORGMATIC_CONFIG}:/root/.config/borg
+      - ${BORGMATIC_CACHE}:/root/.cache/borg
+      - ${BORGMATIC_STATE}:/root/.local/state/borgmatic
+      - ${BORGMATIC_SSH}:/root/.ssh
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - wud.watch=true
+      - wud.trigger.docker.enable=false
+networks:
+  proxy_net:
+    external: true

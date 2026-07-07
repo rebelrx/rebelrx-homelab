@@ -1,0 +1,39 @@
+# =============================================================================
+# Filebrowser Quantum — config.yaml (template)
+# =============================================================================
+# Copy this into the app data dir before first start:
+#   cp config.yaml.example ${FILEBROWSER_DATA_PATH}/config.yaml
+#
+# Filebrowser Quantum has NO implicit defaults — a missing or invalid config
+# makes the container exit at startup. Each `sources` entry's `path` is the
+# CONTAINER-side path and must match a volume mount in compose.yaml. To add a
+# source, mount it in compose.yaml AND add a matching entry here.
+# =============================================================================
+server:
+  database: "/home/filebrowser/data/database.db"
+  cacheDir: "tmp"
+  sources:
+    - path: "/hosthome"
+      name: "Home"
+      config:
+        defaultEnabled: true
+        denyByDefault: false
+        createUserDir: false
+
+    - path: "/srv"
+      name: "Srv"
+      config:
+        defaultEnabled: true
+        denyByDefault: false
+        createUserDir: false
+
+    - path: "/opt"
+      name: "Opt"
+      config:
+        defaultEnabled: true
+        denyByDefault: false
+        createUserDir: false
+
+auth:
+  # Initial admin username. The password is set on first run via the web UI.
+  adminUsername: admin
